@@ -1,0 +1,2 @@
+include ':app'
+include ':lan_manager'
