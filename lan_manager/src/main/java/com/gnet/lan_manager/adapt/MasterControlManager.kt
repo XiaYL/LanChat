@@ -4,10 +4,10 @@ import android.os.Handler
 import android.os.Looper
 import com.gnet.lan_manager.search.MasterSearchManager
 import com.gnet.lan_manager.search.MasterSearchManager.MasterSearchManagerCallback
-import com.gnet.lan_manager.utils.LanLogger
+import com.gnet.lan_manager.search.broadcast.BroadcastHandler
+import com.gnet.lan_manager.log.LanLogger
 import com.gnet.lan_manager.websocket.ClientSocket
 import com.gnet.lan_manager.websocket.MasterWebSocketManager
-import org.json.JSONObject
 
 /**
  * Copyright 2017 SpeakIn.Inc
@@ -15,12 +15,9 @@ import org.json.JSONObject
  */
 class MasterControlManager(
         private val maxConnectCount: Int,
-        private val teamId: String?,
-        private val taskId: String?,
+        private val broadcastHandler: BroadcastHandler,
         private val serverPort: Int,
-        private val protocol: String,
-        private val receiverPort: Int,
-        private val senderPort: Int
+        private val protocol: String
 ) : MasterSearchManagerCallback, IControlManager, SocketManagerCallback {
     private var socketManagerCallback: SocketManagerCallback? = null
     private var searchManager: MasterSearchManager? = null
@@ -30,7 +27,7 @@ class MasterControlManager(
 
     override fun start() {
         searchManager =
-                MasterSearchManager(teamId, taskId, protocol, serverPort, receiverPort, senderPort).apply {
+                MasterSearchManager(broadcastHandler, protocol, serverPort).apply {
                     setSearchCallback(this@MasterControlManager)
                     start()
                 }
@@ -51,6 +48,10 @@ class MasterControlManager(
     }
 
     override fun sendMessage(message: String): Boolean {
+        if (socketManager == null) {
+            LanLogger.e(TAG, "socket manager is null")
+            return false
+        }
         LanLogger.i(TAG, "send message to client: $message")
         return socketManager?.sendMessage(message) ?: false
     }
@@ -80,11 +81,8 @@ class MasterControlManager(
         handler.post { socketManagerCallback?.onDisconnected(clientSocket) }
     }
 
-    override fun onFoundNewSlave(
-            slaveIp: String,
-            slaveInfo: JSONObject
-    ) {
-        LanLogger.d(TAG, "found slave $slaveIp info=$slaveInfo")
+    override fun onFoundNewSlave(slaveIp: String) {
+
     }
 
     private fun stop() {

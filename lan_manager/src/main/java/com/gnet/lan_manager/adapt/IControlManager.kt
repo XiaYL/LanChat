@@ -1,5 +1,7 @@
 package com.gnet.lan_manager.adapt
 
+import com.gnet.lan_manager.search.LanDevice
+
 /**
  *
  * @Description:     管理类
@@ -13,6 +15,10 @@ interface IControlManager {
     fun start()
 
     fun sendMessage(message: String): Boolean
+
+    fun connect(lanDevice: LanDevice) {}
+
+    fun disconnect() {}
 
     fun release()
 }

@@ -1,7 +1,7 @@
 package com.gnet.lan_manager.websocket
 
 import com.gnet.lan_manager.adapt.SocketManagerCallback
-import com.gnet.lan_manager.utils.LanLogger
+import com.gnet.lan_manager.log.LanLogger
 import com.koushikdutta.async.http.AsyncHttpClient
 import com.koushikdutta.async.http.WebSocket
 

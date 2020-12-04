@@ -2,7 +2,8 @@ package com.gnet.lan_manager.search
 
 import android.os.Build
 import com.gnet.lan_manager.search.DeviceBroadcastReceiver.BroadcastReceiverCallback
-import com.gnet.lan_manager.utils.LanLogger
+import com.gnet.lan_manager.search.broadcast.BroadcastHandler
+import com.gnet.lan_manager.log.LanLogger
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
@@ -13,16 +14,13 @@ import kotlin.concurrent.fixedRateTimer
  * Created by west on 2017/9/27.
  */
 class MasterSearchManager(
-        private val teamId: String?,
-        private val taskId: String?,
+        private val broadcastHandler: BroadcastHandler,
         private val protocol: String,
-        private val serverPort: Int,
-        private val receiverPort: Int,
-        private val senderPort: Int
+        private val serverPort: Int
 ) : BroadcastReceiverCallback {
 
     interface MasterSearchManagerCallback {
-        fun onFoundNewSlave(slaveIp: String, slaveInfo: JSONObject)
+        fun onFoundNewSlave(slaveIp: String)
     }
 
     private var broadcastSender: DeviceBroadcastSender? = null
@@ -44,13 +42,13 @@ class MasterSearchManager(
 
     fun start() {
         stop = false
-        broadcastReceiver = DeviceBroadcastReceiver(receiverPort).apply {
+        broadcastReceiver = DeviceBroadcastReceiver(broadcastHandler.receivePort()).apply {
             setBroadcastReceiveCallback(this@MasterSearchManager)
             startBroadcastReceive()
         }
-        broadcastSender = DeviceBroadcastSender(senderPort)
+        broadcastSender = DeviceBroadcastSender(broadcastHandler.senderPort())
         if (timer == null) {
-            timer = fixedRateTimer(taskId, false, 0, BROADCAST_INTERVAL.toLong()) {
+            timer = fixedRateTimer(TAG, false, 0, BROADCAST_INTERVAL.toLong()) {
                 if (!stop) {
                     broadcastSender?.sendBroadcastData(getBroadcastMessage())
                 }
@@ -72,11 +70,11 @@ class MasterSearchManager(
         val jsonObject = JSONObject()
         try {
             jsonObject.put("type", "master")
-            jsonObject.put("teamId", teamId)
-            jsonObject.put("taskId", taskId)
             jsonObject.put("port", serverPort)
             jsonObject.put("protocol", protocol)
             jsonObject.put("deviceName", Build.MODEL)
+            jsonObject.put("uuid", broadcastHandler.broadcastUUId())
+            jsonObject.put("info", broadcastHandler.messageBroadcast())
         } catch (e: JSONException) {
             e.printStackTrace()
         }
@@ -91,16 +89,14 @@ class MasterSearchManager(
         LanLogger.d(TAG, "message:$message")
         try {
             val jsonObj = JSONObject(message)
+            val uuid = jsonObj.optString("uuid")
             val type = jsonObj.optString("type")
-            if (type == "slave") {
-                val team = jsonObj.optString("teamId")
-                val task = jsonObj.optString("taskId")
-                if (team == teamId && task == taskId) {
-                    if (!ipList.contains(senderIp)) {
-                        ipList.add(senderIp)
-                        callback?.onFoundNewSlave(senderIp, jsonObj)
-                    }
+            if (uuid == broadcastHandler.broadcastUUId() && type == "slave") {
+                if (!ipList.contains(senderIp)) {
+                    ipList.add(senderIp)
+                    callback?.onFoundNewSlave(senderIp)
                 }
+                broadcastHandler.onBroadcastMessageReceived(jsonObj.optString("info"))
             }
         } catch (e: JSONException) {
             e.printStackTrace()

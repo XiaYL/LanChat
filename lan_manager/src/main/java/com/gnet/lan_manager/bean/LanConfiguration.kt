@@ -1,6 +1,8 @@
 package com.gnet.lan_manager.bean
 
 import com.gnet.lan_manager.ControlConstants
+import com.gnet.lan_manager.log.ILogger
+import com.gnet.lan_manager.search.broadcast.BroadcastHandler
 
 /**
  * @Description: 局域网组配置
@@ -9,10 +11,8 @@ import com.gnet.lan_manager.ControlConstants
  */
 class LanConfiguration(val isSlave: Boolean? = true) {
     var maxClient: Int = ControlConstants.SLAVECOUNT
-    var teamId: String? = ControlConstants.TEAMID
-    var taskId: String? = ControlConstants.TASKID
+    var broadcastHandler: BroadcastHandler? = null
     var protocol: String = ControlConstants.PROTOCOL
     var serverPort: Int = ControlConstants.SERVER_SOCKET_PORT
-    var clientListenPort: Int = ControlConstants.SLAVE_LISTEN_PORT
-    var serverListenPort: Int = ControlConstants.MASTER_LISTEN_PORT
+    var logger: ILogger? = null
 }

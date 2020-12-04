@@ -3,7 +3,7 @@ package com.gnet.lan_manager.search
 import android.os.Handler
 import android.os.Looper
 import com.gnet.lan_manager.utils.IpUtil.hostIP
-import com.gnet.lan_manager.utils.LanLogger
+import com.gnet.lan_manager.log.LanLogger
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket

@@ -6,7 +6,11 @@ import com.gnet.lan_manager.adapt.MasterControlManager
 import com.gnet.lan_manager.adapt.SlaveControlManager
 import com.gnet.lan_manager.adapt.SocketManagerCallback
 import com.gnet.lan_manager.bean.LanConfiguration
-import com.gnet.lan_manager.utils.LanLogger
+import com.gnet.lan_manager.log.LanLogger
+import com.gnet.lan_manager.search.LanDevice
+import com.gnet.lan_manager.search.broadcast.BroadcastHandler
+import com.gnet.lan_manager.search.broadcast.MasterBroadcastHandler
+import com.gnet.lan_manager.search.broadcast.SlaveBroadcastHandler
 
 /**
  *
@@ -31,6 +35,7 @@ object LanManager {
         }
         this.context = context
         this.configuration = configuration
+        LanLogger.init(configuration.logger)
         initManager()
     }
 
@@ -40,25 +45,26 @@ object LanManager {
             return
         }
         configuration?.let {
+            val broadcastHandler = getBroadcastHandler()
             iControlManager = if (it.isSlave != false) {
-                SlaveControlManager(
-                        it.teamId,
-                        it.taskId,
-                        it.clientListenPort,
-                        it.serverListenPort
-                )
+                SlaveControlManager(broadcastHandler)
             } else {
                 MasterControlManager(
                         it.maxClient,
-                        it.teamId,
-                        it.taskId,
+                        broadcastHandler,
                         it.serverPort,
-                        it.protocol,
-                        it.serverListenPort,
-                        it.clientListenPort
+                        it.protocol
                 )
             }
         }
+    }
+
+    private fun getBroadcastHandler(): BroadcastHandler {
+        var broadcastHandler = configuration?.broadcastHandler
+        if (broadcastHandler == null) {
+            broadcastHandler = if (configuration?.isSlave == true) SlaveBroadcastHandler() else MasterBroadcastHandler()
+        }
+        return broadcastHandler
     }
 
     fun setSocketManagerCallback(socketManagerCallback: SocketManagerCallback?) {
@@ -67,6 +73,14 @@ object LanManager {
 
     fun start() {
         iControlManager?.start()
+    }
+
+    fun connect(lanDevice: LanDevice) {
+        iControlManager?.connect(lanDevice)
+    }
+
+    fun disconnect() {
+        iControlManager?.disconnect()
     }
 
     fun release() {
