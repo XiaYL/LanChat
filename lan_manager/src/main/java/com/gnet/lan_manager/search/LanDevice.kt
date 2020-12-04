@@ -10,10 +10,21 @@ data class LanDevice(
         val ip: String,
         val port: Int,
         val protocol: String,
-        val server: Boolean
+        val server: Boolean,
+        var deviceInfo: String?
 ) {
 
     override fun toString(): String {
         return "[ip = $ip, port= $port, protocol= $protocol], server= $server"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other !is LanDevice) {
+            return false
+        }
+        return other.ip == ip && other.port == port && other.protocol == protocol
     }
 }

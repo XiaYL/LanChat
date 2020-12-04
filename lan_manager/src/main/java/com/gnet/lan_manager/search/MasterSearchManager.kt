@@ -1,9 +1,9 @@
 package com.gnet.lan_manager.search
 
 import android.os.Build
+import com.gnet.lan_manager.log.LanLogger
 import com.gnet.lan_manager.search.DeviceBroadcastReceiver.BroadcastReceiverCallback
 import com.gnet.lan_manager.search.broadcast.BroadcastHandler
-import com.gnet.lan_manager.log.LanLogger
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
@@ -20,7 +20,7 @@ class MasterSearchManager(
 ) : BroadcastReceiverCallback {
 
     interface MasterSearchManagerCallback {
-        fun onFoundNewSlave(slaveIp: String)
+        fun onFoundNewSlave(lanDevice: LanDevice)
     }
 
     private var broadcastSender: DeviceBroadcastSender? = null
@@ -28,13 +28,11 @@ class MasterSearchManager(
 
     @Volatile
     private var stop = false
-    private val ipList: MutableList<String>
+
+    @Volatile
+    private var ipList: MutableList<String> = ArrayList(5)
     private var callback: MasterSearchManagerCallback? = null
     private var timer: Timer? = null
-
-    init {
-        ipList = ArrayList(5)
-    }
 
     fun setSearchCallback(callback: MasterSearchManagerCallback?) {
         this.callback = callback
@@ -92,11 +90,12 @@ class MasterSearchManager(
             val uuid = jsonObj.optString("uuid")
             val type = jsonObj.optString("type")
             if (uuid == broadcastHandler.broadcastUUId() && type == "slave") {
+                val info = jsonObj.optString("info")
                 if (!ipList.contains(senderIp)) {
                     ipList.add(senderIp)
-                    callback?.onFoundNewSlave(senderIp)
+                    callback?.onFoundNewSlave(LanDevice(senderIp, serverPort, protocol, false, info))
                 }
-                broadcastHandler.onBroadcastMessageReceived(jsonObj.optString("info"))
+                broadcastHandler.onBroadcastMessageReceived(info)
             }
         } catch (e: JSONException) {
             e.printStackTrace()

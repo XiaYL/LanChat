@@ -2,10 +2,11 @@ package com.gnet.lan_manager.adapt
 
 import android.os.Handler
 import android.os.Looper
+import com.gnet.lan_manager.log.LanLogger
+import com.gnet.lan_manager.search.LanDevice
 import com.gnet.lan_manager.search.MasterSearchManager
 import com.gnet.lan_manager.search.MasterSearchManager.MasterSearchManagerCallback
 import com.gnet.lan_manager.search.broadcast.BroadcastHandler
-import com.gnet.lan_manager.log.LanLogger
 import com.gnet.lan_manager.websocket.ClientSocket
 import com.gnet.lan_manager.websocket.MasterWebSocketManager
 
@@ -81,8 +82,8 @@ class MasterControlManager(
         handler.post { socketManagerCallback?.onDisconnected(clientSocket) }
     }
 
-    override fun onFoundNewSlave(slaveIp: String) {
-
+    override fun onFoundNewSlave(lanDevice: LanDevice) {
+        handler.post { socketManagerCallback?.onAvailableDeviceFound(lanDevice) }
     }
 
     private fun stop() {

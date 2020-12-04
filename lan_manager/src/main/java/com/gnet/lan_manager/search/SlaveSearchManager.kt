@@ -1,9 +1,9 @@
 package com.gnet.lan_manager.search
 
 import android.os.Build
+import com.gnet.lan_manager.log.LanLogger
 import com.gnet.lan_manager.search.DeviceBroadcastReceiver.BroadcastReceiverCallback
 import com.gnet.lan_manager.search.broadcast.BroadcastHandler
-import com.gnet.lan_manager.log.LanLogger
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -17,6 +17,9 @@ class SlaveSearchManager(
     private var broadcastSender: DeviceBroadcastSender? = null
     private var broadcastReceiver: DeviceBroadcastReceiver? = null
     private var callback: SlaveSearchManagerCallback? = null
+
+    @Volatile
+    private var masterDevices = mutableListOf<LanDevice>()
 
     interface SlaveSearchManagerCallback {
         fun onFoundMaster(device: LanDevice)
@@ -54,9 +57,14 @@ class SlaveSearchManager(
             if (uuid == broadcastHandler.broadcastUUId() && type == "master") {
                 val port = jsonObj.optInt("port", 8080)
                 val protocol = jsonObj.optString("protocol")
+                val info = jsonObj.optString("info")
                 broadcastSender?.sendBroadcastData(getBroadcastMessage())
-                callback?.onFoundMaster(LanDevice(senderIp, port, protocol, true))
-                broadcastHandler.onBroadcastMessageReceived(jsonObj.optString("info"))
+                val device = LanDevice(senderIp, port, protocol, true, info)
+                if (!masterDevices.contains(device)) {
+                    masterDevices.add(device)
+                    callback?.onFoundMaster(device)
+                }
+                broadcastHandler.onBroadcastMessageReceived(info)
             }
         } catch (e: JSONException) {
             e.printStackTrace()

@@ -2,8 +2,8 @@ package com.gnet.lan_manager.search
 
 import android.os.Handler
 import android.os.Looper
-import com.gnet.lan_manager.utils.IpUtil.hostIP
 import com.gnet.lan_manager.log.LanLogger
+import com.gnet.lan_manager.utils.IpUtil.hostIP
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -33,11 +33,11 @@ class DeviceBroadcastReceiver(private val port: Int) {
 
     @Throws(IOException::class)
     private fun startReceive() {
-        LanLogger.i(TAG, "---------- start listen ------------")
         val receive = DatagramPacket(ByteArray(BUFFER_LEN), BUFFER_LEN)
         if (server == null) {
             server = DatagramSocket(port)
         }
+        LanLogger.i(TAG, "---------- start listen ------------")
         while (needListen) {
             server?.receive(receive)
             val recvByte = Arrays.copyOfRange(receive.data, 0, receive.length)
@@ -62,7 +62,6 @@ class DeviceBroadcastReceiver(private val port: Int) {
             try {
                 startReceive()
             } catch (e: IOException) {
-                e.printStackTrace()
                 handler.post {
                     callback?.onBroadcastError(e.message)
                 }
