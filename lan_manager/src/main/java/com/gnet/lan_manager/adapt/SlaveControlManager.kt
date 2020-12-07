@@ -138,9 +138,6 @@ class SlaveControlManager(
     }
 
     private fun startSearchMaster() {
-        if (mState != ConnectState.DISCONNECTED) {
-            return
-        }
         LanLogger.i(TAG, "start search server")
         setState(ConnectState.SEARCHING)
         searchManager = SlaveSearchManager(broadcastHandler).apply {

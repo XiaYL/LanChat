@@ -7,6 +7,7 @@ import com.gnet.lan_manager.utils.IpUtil.hostIP
 import java.io.IOException
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.net.InetSocketAddress
 import java.util.*
 
 /**
@@ -35,7 +36,11 @@ class DeviceBroadcastReceiver(private val port: Int) {
     private fun startReceive() {
         val receive = DatagramPacket(ByteArray(BUFFER_LEN), BUFFER_LEN)
         if (server == null) {
-            server = DatagramSocket(port)
+            server = DatagramSocket(null)//此处一定要设置null，不然会自动绑定端口
+                    .apply {
+                        reuseAddress = true
+                        bind(InetSocketAddress(inetAddress, this@DeviceBroadcastReceiver.port))
+                    }
         }
         LanLogger.i(TAG, "---------- start listen ------------")
         while (needListen) {
